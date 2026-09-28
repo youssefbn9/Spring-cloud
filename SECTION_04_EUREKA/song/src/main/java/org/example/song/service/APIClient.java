@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
  * url  = adresse de instrument-microservice (port 8080)
  * value = nom logique du client (utilisé par Eureka dans les ateliers suivants)
  */
-// @FeignClient(url = "http://localhost:8082", value = "INSTRUMENT")  // Atelier 02 - URL statique
-@FeignClient(name = "INSTRUMENT")  // Atelier 03 - Découverte Eureka (Load Balancer automatique)
+//@FeignClient(url = "http://localhost:8082", value = "INSTRUMENT")
+@FeignClient(name = "INSTRUMENT")
 public interface APIClient {
 
     @GetMapping("api/instruments/{instrument-code}")

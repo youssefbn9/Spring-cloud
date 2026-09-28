@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>eurekaserver</module>
         <module>instrument</module>
         <module>song</module>
     </modules>

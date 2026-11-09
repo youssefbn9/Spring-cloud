@@ -1,0 +1,210 @@
+services:
+  mysqldb:
+    image: mysql:8.4
+    container_name: mysqldb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secret_pass_2026}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-instrumentdb}
+      MYSQL_USER: ${MYSQL_USER:-appuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-app_secret_pass_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  rabbitmq:
+    image: rabbitmq:4.0-management
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-rabbitapp}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-rabbit_secret_pass_2026}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  eurekaserver:
+    build:
+      context: ./eurekaserver
+    container_name: eurekaserver
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbitapp}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbit_secret_pass_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8761/actuator/health | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  configserver:
+    build:
+      context: ./configserver
+    container_name: configserver
+    restart: unless-stopped
+    ports:
+      - "9999:9999"
+    volumes:
+      - ./config-repo:/app/config-repo:ro
+    environment:
+      CONFIG_SERVER_PROFILE: git
+      CONFIG_REPO_PATH: file:/app/config-repo
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbitapp}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbit_secret_pass_2026}
+      CONFIG_MONITOR_WEBHOOK_SECRET: ${CONFIG_MONITOR_WEBHOOK_SECRET:-super_secret_webhook_token_2026}
+      CONFIG_REPO_GIT_URI: ${CONFIG_REPO_GIT_URI:-}
+      CONFIG_REPO_GIT_USERNAME: ${CONFIG_REPO_GIT_USERNAME:-}
+      CONFIG_REPO_GIT_PASSWORD: ${CONFIG_REPO_GIT_PASSWORD:-}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:9999/actuator/health | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  instrument-ms:
+    build:
+      context: ./instrument
+    container_name: instrument-ms
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/${MYSQL_DATABASE:-instrumentdb}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-appuser}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-app_secret_pass_2026}
+      DISCOVERY_SERVICE_URL: http://eurekaserver:8761/eureka/
+      CONFIG_SERVICE_URL: http://configserver:9999
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbitapp}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbit_secret_pass_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/actuator/health | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+
+  instrument-ms2:
+    build:
+      context: ./instrument
+    container_name: instrument-ms2
+    restart: unless-stopped
+    ports:
+      - "8084:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/${MYSQL_DATABASE:-instrumentdb}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-appuser}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-app_secret_pass_2026}
+      DISCOVERY_SERVICE_URL: http://eurekaserver:8761/eureka/
+      CONFIG_SERVICE_URL: http://configserver:9999
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbitapp}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbit_secret_pass_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/actuator/health | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+
+  gatewayserver:
+    build:
+      context: ./gatewayserver
+    container_name: gatewayserver
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      DISCOVERY_SERVICE_URL: http://eurekaserver:8761/eureka/
+      CONFIG_SERVICE_URL: http://configserver:9999
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbitapp}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbit_secret_pass_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8888/actuator/health | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+
+  song-ms:
+    build:
+      context: ./song
+    container_name: song-ms
+    restart: unless-stopped
+    ports:
+      - "8083:8081"
+    environment:
+      DISCOVERY_SERVICE_URL: http://eurekaserver:8761/eureka/
+      CONFIG_SERVICE_URL: http://configserver:9999
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbitapp}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbit_secret_pass_2026}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8081/actuator/health | grep -q UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+      instrument-ms:
+        condition: service_healthy

@@ -1,40 +1,46 @@
 package org.example.song.service;
 
+import lombok.AllArgsConstructor;
 import org.example.song.dto.APIResponseDto;
-import org.example.song.dto.instrumentDto;
-import org.example.song.dto.songDto;
-import org.example.song.entities.song;
-import org.example.song.repos.songRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.song.dto.InstrumentDto;
+import org.example.song.dto.SongDto;
+import org.example.song.entities.Song;
+import org.example.song.repos.SongRepository;
 import org.springframework.stereotype.Service;
 
 @Service
-public class songServiceImpl implements songService {
+@AllArgsConstructor
+public class SongServiceImpl implements SongService {
 
-    @Autowired
-    songRepository songRepository;
-
-    @Autowired
-    private APIClient apiClient;
+    private final SongRepository songRepository;
+    private final APIClient apiClient;
 
     @Override
     public APIResponseDto getSongById(Long id) {
-        song s = songRepository.findById(id).get();
+        Song s = songRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Song not found with id: " + id));
 
-        instrumentDto instrumentDto = apiClient.getInstrumentByCode(s.getInstrumentCode());
+        InstrumentDto instrumentDto = null;
+        try {
+            instrumentDto = apiClient.getInstrumentByCode(s.getInstrumentCode());
+        } catch (Exception e) {
+            instrumentDto = InstrumentDto.builder()
+                    .name("Unknown")
+                    .code(s.getInstrumentCode())
+                    .build();
+        }
 
-        songDto songDto = new songDto(
-                s.getId(),
-                s.getTitle(),
-                s.getArtist(),
-                s.getInstrumentCode(),
-                instrumentDto.getInstrumentName()
-        );
+        SongDto songDto = SongDto.builder()
+                .id(s.getId())
+                .title(s.getTitle())
+                .artist(s.getArtist())
+                .instrumentCode(s.getInstrumentCode())
+                .instrumentName(instrumentDto != null ? instrumentDto.getName() : null)
+                .build();
 
-        APIResponseDto apiResponseDto = new APIResponseDto();
-        apiResponseDto.setSongDto(songDto);
-        apiResponseDto.setInstrumentDto(instrumentDto);
-
-        return apiResponseDto;
+        return APIResponseDto.builder()
+                .songDto(songDto)
+                .instrumentDto(instrumentDto)
+                .build();
     }
 }

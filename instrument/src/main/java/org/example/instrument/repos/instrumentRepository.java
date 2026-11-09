@@ -1,9 +1,16 @@
 package org.example.instrument.repos;
 
-import org.example.instrument.entities.instrument;
+import org.example.instrument.entities.Instrument;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface instrumentRepository extends JpaRepository<instrument, Long> {
+import java.util.Optional;
 
-    instrument findByInstrumentCode(String code);
+@Repository
+public interface InstrumentRepository extends JpaRepository<Instrument, Long> {
+    Optional<Instrument> findByCode(String code);
+
+    default Instrument findByInstrumentCode(String code) {
+        return findByCode(code).orElse(null);
+    }
 }

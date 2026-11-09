@@ -25,3 +25,7 @@ Thumbs.db
 
 # Spring Boot
 *.log
+
+# Secrets & Environment
+.env
+.env.local

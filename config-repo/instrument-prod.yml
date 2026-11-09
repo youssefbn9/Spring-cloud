@@ -1,0 +1,5 @@
+build:
+  version: "1.0.0-PROD"
+author:
+  name: "Youssef Instrument PROD"
+  email: "youssef-prod@instrument.com"

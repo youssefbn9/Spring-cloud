@@ -1,7 +1,9 @@
 package org.example.song.repos;
 
-import org.example.song.entities.song;
+import org.example.song.entities.Song;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface songRepository extends JpaRepository<song, Long> {
+@Repository
+public interface SongRepository extends JpaRepository<Song, Long> {
 }

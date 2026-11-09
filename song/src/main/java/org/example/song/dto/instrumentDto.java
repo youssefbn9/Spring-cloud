@@ -1,19 +1,32 @@
 package org.example.song.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Copie locale de l'instrumentDto du microservice instrument.
- * Utilisée pour désérialiser la réponse JSON reçue depuis instrument-microservice
- * (via WebClient ou OpenFeign).
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class instrumentDto {
+@Builder
+public class InstrumentDto {
     private Long id;
-    private String instrumentName;
-    private String instrumentCode;
+    private String name;
+    private String code;
+
+    public String getInstrumentName() {
+        return name;
+    }
+
+    public void setInstrumentName(String instrumentName) {
+        this.name = instrumentName;
+    }
+
+    public String getInstrumentCode() {
+        return code;
+    }
+
+    public void setInstrumentCode(String instrumentCode) {
+        this.code = instrumentCode;
+    }
 }

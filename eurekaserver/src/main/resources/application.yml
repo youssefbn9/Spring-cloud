@@ -1,0 +1,28 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eurekaserver
+  cloud:
+    config:
+      enabled: false
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:rabbitapp}
+    password: ${SPRING_RABBITMQ_PASSWORD:rabbit_secret_pass_2026}
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh,busrefresh,monitor
+  endpoint:
+    health:
+      show-details: always

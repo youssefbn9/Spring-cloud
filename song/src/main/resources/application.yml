@@ -4,25 +4,34 @@ server:
 spring:
   application:
     name: song
+  config:
+    import: optional:configserver:${CONFIG_SERVICE_URL:http://localhost:9999}
+  cloud:
+    config:
+      enabled: true
+    discovery:
+      enabled: true
   datasource:
-    url: 'jdbc:h2:mem:songdb'
+    url: jdbc:h2:mem:songdb
+    driver-class-name: org.h2.Driver
   h2:
     console:
       enabled: true
+      path: /h2-console
   jpa:
     show-sql: true
     hibernate:
       ddl-auto: update
-  cloud:
-    config:
-      enabled: false
-    discovery:
-      enabled: true
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:rabbitapp}
+    password: ${SPRING_RABBITMQ_PASSWORD:rabbit_secret_pass_2026}
 
 eureka:
   client:
     service-url:
-      defaultZone: 'http://localhost:8761/eureka/'
+      defaultZone: ${DISCOVERY_SERVICE_URL:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 
@@ -30,4 +39,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: health,info,refresh,busrefresh,monitor
+  endpoint:
+    health:
+      show-details: always
+
+# Fallback values if Config Server is unavailable
+build:
+  version: "1.0.0-local"
+
+author:
+  name: "Youssef Song"
+  email: "song-local@youssef.com"

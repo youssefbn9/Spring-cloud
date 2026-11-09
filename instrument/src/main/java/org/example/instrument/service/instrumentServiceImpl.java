@@ -1,38 +1,36 @@
 package org.example.instrument.service;
 
 import lombok.AllArgsConstructor;
-import org.example.instrument.dto.instrumentDto;
-import org.example.instrument.entities.instrument;
-import org.example.instrument.repos.instrumentRepository;
+import org.example.instrument.dto.InstrumentDto;
+import org.example.instrument.entities.Instrument;
+import org.example.instrument.repos.InstrumentRepository;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class instrumentServiceImpl implements instrumentService {
+public class InstrumentServiceImpl implements InstrumentService {
 
-    private final instrumentRepository instrumentRepository;
+    private final InstrumentRepository instrumentRepository;
 
     @Override
-    public instrumentDto getInstrumentByCode(String code) {
-        instrument inst = instrumentRepository.findByInstrumentCode(code);
-        if (inst == null) {
-            throw new RuntimeException("Instrument not found with code: " + code);
-        }
-        return new instrumentDto(
+    public InstrumentDto getInstrumentByCode(String code) {
+        Instrument inst = instrumentRepository.findByCode(code)
+                .orElseThrow(() -> new RuntimeException("Instrument not found with code: " + code));
+        return new InstrumentDto(
                 inst.getId(),
-                inst.getInstrumentName(),
-                inst.getInstrumentCode()
+                inst.getName(),
+                inst.getCode()
         );
     }
 
     @Override
-    public instrumentDto getInstrumentById(Long id) {
-        instrument inst = instrumentRepository.findById(id)
+    public InstrumentDto getInstrumentById(Long id) {
+        Instrument inst = instrumentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Instrument not found with id: " + id));
-        return new instrumentDto(
+        return new InstrumentDto(
                 inst.getId(),
-                inst.getInstrumentName(),
-                inst.getInstrumentCode()
+                inst.getName(),
+                inst.getCode()
         );
     }
 }

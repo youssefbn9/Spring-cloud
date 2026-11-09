@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Entity
-public class song {
+@Table(name = "songs")
+public class Song {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,8 +24,5 @@ public class song {
 
     private String title;
     private String artist;
-
-    // Code de l'instrument auquel cette chanson est associée (ex: "PN" pour Piano)
-    // Utilisé par l'Atelier 02 pour appeler instrument-microservice
     private String instrumentCode;
 }

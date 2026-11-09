@@ -4,9 +4,11 @@ server:
 spring:
   application:
     name: gatewayserver
+  config:
+    import: optional:configserver:${CONFIG_SERVICE_URL:http://localhost:9999}
   cloud:
     config:
-      enabled: false
+      enabled: true
     discovery:
       enabled: true
     gateway:
@@ -15,19 +17,26 @@ spring:
           enabled: true
           lowerCaseServiceId: true
       routes:
-        - id: r1
+        - id: song-service
           uri: lb://SONG
           predicates:
             - Path=/api/songs/**
-        - id: r2
+        - id: instrument-service
           uri: lb://INSTRUMENT
           predicates:
             - Path=/api/instruments/**
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:rabbitapp}
+    password: ${SPRING_RABBITMQ_PASSWORD:rabbit_secret_pass_2026}
 
 eureka:
   client:
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: 'http://localhost:8761/eureka/'
+      defaultZone: ${DISCOVERY_SERVICE_URL:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 
@@ -35,7 +44,9 @@ management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: health,info,refresh,busrefresh,monitor
   endpoint:
+    health:
+      show-details: always
     gateway:
       access: unrestricted

@@ -1,8 +1,8 @@
 package org.example.instrument.service;
 
-import org.example.instrument.dto.instrumentDto;
+import org.example.instrument.dto.InstrumentDto;
 
-public interface instrumentService {
-    instrumentDto getInstrumentByCode(String code);
-    instrumentDto getInstrumentById(Long id);
+public interface InstrumentService {
+    InstrumentDto getInstrumentByCode(String code);
+    InstrumentDto getInstrumentById(Long id);
 }
